@@ -10,62 +10,62 @@ import {
 
 import { useRouter } from "expo-router";
 
+import { MARK, getAllMark } from "@/service/endpoints";
 import { ListEmptyView } from "@/components/ListEmptyView";
 import { useVehicleInfo } from "@/providers/VehicleInfoProvider";
 
-export default function Year() {
+export default function Make() {
   const router = useRouter();
-  const { setYear } = useVehicleInfo();
+  const { year, setMake } = useVehicleInfo();
 
-  const [years, setYears] = useState<Array<number>>([]);
+  const [makes, setMakes] = useState<Array<MARK>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const generateYears = (startYear: number, endYear: number): Array<number> => {
-    setIsLoading(true);
-    const years: Array<number> = [...Array(endYear - startYear + 1).keys()]
-      .map((i) => i + startYear)
-      .reverse();
-    setIsLoading(false);
-    return years;
+  const getMakes = async (year: number | undefined) => {
+    if (year) {
+      setIsLoading(true);
+      const result = await getAllMark();
+      setMakes(result);
+      setIsLoading(false);
+    }
   };
 
-  const onYearSelectHandler = (year: number) => {
-    setYear(year);
-    router.push("/Make");
+  const onMakeSelectHandler = (make: MARK) => {
+    setMake(make);
+    router.push("/Model");
   };
 
   useEffect(() => {
-    const startYear: number = 1995;
-    const endYear: number = new Date().getFullYear();
-    const years = generateYears(startYear, endYear);
-    setYears(years);
-  }, []);
+    setMakes([]);
+    getMakes(year);
+  }, [year]);
 
-  const YearItem = ({ year }: { year: number }) => {
+  const MakeItem = ({ make }: { make: MARK }) => {
     return (
       <TouchableOpacity
         accessible
         importantForAccessibility="yes"
-        accessibilityLabel={year.toString()}
+        accessibilityLabel={make.Make_Name}
         accessibilityRole="button"
-        onPress={() => onYearSelectHandler(year)}
+        key={make.Make_ID}
+        onPress={() => onMakeSelectHandler(make)}
       >
-        <Text style={styles.yearItem}>{year}</Text>
+        <Text style={styles.makeItem}>{make.Make_Name}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <FlatList<number>
+    <FlatList<MARK>
       accessible
-      accessibilityLabel="Years"
+      accessibilityLabel="Makes"
       importantForAccessibility="yes"
       accessibilityRole="list"
-      data={years}
+      data={makes}
       contentContainerStyle={styles.flatList}
       refreshControl={<RefreshControl refreshing={isLoading} />}
-      renderItem={({ item }) => <YearItem year={item} />}
-      ListEmptyComponent={<ListEmptyView label={"No Years"} />}
+      renderItem={({ item }) => <MakeItem make={item} />}
+      ListEmptyComponent={<ListEmptyView label={"No Makes"} />}
       scrollEventThrottle={50}
       maxToRenderPerBatch={10}
       onEndReachedThreshold={0.5}
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 20,
   },
-  yearItem: {
+  makeItem: {
     marginVertical: 1,
     backgroundColor: "white",
     paddingVertical: 15,
